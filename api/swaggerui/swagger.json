@@ -1,0 +1,230 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "Golang gogobank project"
+  },
+  "basePath": "/v1",
+  "paths": {
+    "/account/": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Create an account with balance.",
+        "operationId": "newAccReq",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/NewAccReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/newAccRes"
+          }
+        }
+      }
+    },
+    "/account/trans/": {
+      "post": {
+        "description": "If 'from/to' account doesn't exists NotExistsCode will be returned. If 'from'-account has not enough money NotEnoughMoneyCode will be returned.",
+        "tags": [
+          "account"
+        ],
+        "summary": "Transfer money from an account to another one.",
+        "operationId": "transReq",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/TransReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/transRes"
+          }
+        }
+      }
+    },
+    "/account/{id}": {
+      "get": {
+        "description": "If the account doesn't exists NotExistsCode will be returned.",
+        "tags": [
+          "account"
+        ],
+        "summary": "The account with balance by ID.",
+        "operationId": "noReq",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "The account ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getAccRes"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Account": {
+      "type": "object",
+      "properties": {
+        "Balance": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/model"
+    },
+    "GetAccRes": {
+      "type": "object",
+      "properties": {
+        "acc": {
+          "$ref": "#/definitions/Account"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Code"
+        },
+        "msg": {
+          "type": "string",
+          "x-go-name": "Msg"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/handler"
+    },
+    "NewAccReq": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Balance"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/handler"
+    },
+    "NewAccRes": {
+      "type": "object",
+      "properties": {
+        "acc": {
+          "$ref": "#/definitions/Account"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Code"
+        },
+        "msg": {
+          "type": "string",
+          "x-go-name": "Msg"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/handler"
+    },
+    "NotEnoughMoneyError": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "Summ": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/model"
+    },
+    "NotExistsError": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/model"
+    },
+    "TransReq": {
+      "type": "object",
+      "properties": {
+        "idFrom": {
+          "description": "The sender account ID.",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "IdFrom"
+        },
+        "idTo": {
+          "description": "The recipient account ID.",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "IdTo"
+        },
+        "summ": {
+          "description": "The transfer summ.",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Summ"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/handler"
+    },
+    "TransRes": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Code"
+        },
+        "msg": {
+          "type": "string",
+          "x-go-name": "Msg"
+        }
+      },
+      "x-go-package": "gogobank/vendor/app/handler"
+    }
+  },
+  "responses": {
+    "getAccRes": {
+      "description": "GetAccRes\nGet Account response model.",
+      "schema": {
+        "$ref": "#/definitions/GetAccRes"
+      }
+    },
+    "newAccRes": {
+      "description": "newAccRes\nCreate Account response model.",
+      "schema": {
+        "$ref": "#/definitions/NewAccRes"
+      }
+    }
+  }
+}

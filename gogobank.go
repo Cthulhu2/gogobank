@@ -1,4 +1,15 @@
-// gogobank project gogobank.go
+// Golang gogobank project
+//
+//     Schemes: http, https
+//     BasePath: /v1
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package main
 
 import (
@@ -7,6 +18,7 @@ import (
 	"runtime"
 
 	"app/jsonconfig"
+	"app/model"
 	"app/route"
 	"app/server"
 )
@@ -29,6 +41,8 @@ func init() {
 func main() {
 	// Load the configuration file
 	jsonconfig.Load("config/config.json", config)
+
+	model.Init()
 
 	// Start the listener
 	server.Run(route.LoadHTTP(), route.LoadHTTPS(), config.Server)

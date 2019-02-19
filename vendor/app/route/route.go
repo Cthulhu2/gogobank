@@ -62,14 +62,12 @@ func routes() *mux.Router {
 	r.HandleFunc("/index", handler.IndexGET)
 
 	// Account
-	sa := r.PathPrefix("/account").Subrouter()
+	sa := r.PathPrefix("/v1/account").Subrouter()
 	sa.HandleFunc("/{id}", handler.AccountGET).
 		Methods("GET")
 	sa.HandleFunc("/", handler.AccountPOST).
 		Methods("POST")
-
-	// Transaction
-	r.HandleFunc("/transaction", handler.TransactionPOST).
+	sa.HandleFunc("/trans/", handler.TransferPOST).
 		Methods("POST")
 
 	// Enable Pprof
@@ -78,6 +76,10 @@ func routes() *mux.Router {
 	sd.HandleFunc("/profile", pprof.Profile)
 	sd.HandleFunc("/symbol", pprof.Symbol)
 	sd.HandleFunc("/", pprof.Index)
+
+	// SwaggerUI
+	fs := http.FileServer(http.Dir("./api/swaggerui/"))
+	r.PathPrefix("/swaggerui/").Handler(http.StripPrefix("/swaggerui/", fs))
 
 	return r
 }

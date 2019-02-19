@@ -5,14 +5,19 @@ import (
 	"sync"
 )
 
+// swagger:model Account
 type Account struct {
 	ID      int64 `json: "id"`
 	Balance int64 `json: "balance"`
 }
 
+var NotExistsCode = 1
+
 type NotExistsError struct {
 	ID int64
 }
+
+var NotEnoughMoneyCode = 2
 
 type NotEnoughMoneyError struct {
 	ID   int64
@@ -20,18 +25,22 @@ type NotEnoughMoneyError struct {
 }
 
 func (e *NotExistsError) Error() string {
-	return fmt.Sprintf("'%d' account is not exists", e.ID)
+	return fmt.Sprintf("Account '%d' doesn't exists", e.ID)
 }
 
 func (e *NotEnoughMoneyError) Error() string {
-	return fmt.Sprintf("'%d' account has not enough money (%d)", e.ID, e.Summ)
+	return fmt.Sprintf("Account '%d' has not enough money (%d)", e.ID, e.Summ)
 }
 
 var accountsIdSeq int64 = 0
 var accountsIdSeqMutex = &sync.Mutex{}
 
 var accounts = make(map[int64]*Account)
-var transactionMutex = &sync.Mutex{}
+var transferMutex = &sync.Mutex{}
+
+func Init() {
+	AccountNew(123)
+}
 
 func AccountNew(balance int64) *Account {
 	accountsIdSeqMutex.Lock()
@@ -56,7 +65,7 @@ func AccountGet(id int64) (acc *Account, err error) {
 }
 
 // Transfer money from account to another one
-func Transaction(idFrom int64, idTo int64, summ int64) error {
+func Transfer(idFrom int64, idTo int64, summ int64) error {
 	accFrom, exists := accounts[idFrom]
 	if !exists {
 		return &NotExistsError{idFrom} //
@@ -70,13 +79,13 @@ func Transaction(idFrom int64, idTo int64, summ int64) error {
 		return nil // OK
 	}
 
-	transactionMutex.Lock()
-	if accFrom.Balance <= summ {
-		transactionMutex.Unlock()
+	transferMutex.Lock()
+	if accFrom.Balance < summ {
+		transferMutex.Unlock()
 		return &NotEnoughMoneyError{idFrom, summ}
 	}
 	accFrom.Balance -= summ
 	accTo.Balance += summ
-	transactionMutex.Unlock()
+	transferMutex.Unlock()
 	return nil
 }

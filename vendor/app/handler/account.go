@@ -140,7 +140,7 @@ type TransReq struct {
 
 // transRes
 // Transfer response model.
-// swagger:parameters transRes
+// swagger:response transRes
 type swagTransRes struct {
 	// in: body
 	Body TransRes

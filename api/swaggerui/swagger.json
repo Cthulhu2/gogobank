@@ -225,6 +225,12 @@
       "schema": {
         "$ref": "#/definitions/NewAccRes"
       }
+    },
+    "transRes": {
+      "description": "transRes\nTransfer response model.",
+      "schema": {
+        "$ref": "#/definitions/TransRes"
+      }
     }
   }
 }

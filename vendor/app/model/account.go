@@ -32,14 +32,15 @@ func (e *NotEnoughMoneyError) Error() string {
 	return fmt.Sprintf("Account '%d' has not enough money (%d)", e.ID, e.Summ)
 }
 
-var accountsIdSeq int64 = 0
+var accountsIdSeq int64
 var accountsIdSeqMutex = &sync.Mutex{}
 
-var accounts = make(map[int64]*Account)
+var accounts map[int64]*Account
 var transferMutex = &sync.Mutex{}
 
 func Init() {
-	AccountNew(123)
+	accountsIdSeq = 0
+	accounts = make(map[int64]*Account)
 }
 
 func AccountNew(balance int64) *Account {

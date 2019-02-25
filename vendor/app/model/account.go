@@ -44,16 +44,16 @@ func Init() {
 }
 
 func AccountNew(balance int64) *Account {
-	accountsIdSeqMutex.Lock()
-	accountsIdSeq += 1
-	id := accountsIdSeq
-	accountsIdSeqMutex.Unlock()
-
 	account := &Account{
-		ID:      id,
 		Balance: balance,
 	}
-	accounts[id] = account
+
+	accountsIdSeqMutex.Lock()
+	accountsIdSeq += 1
+	account.ID = accountsIdSeq
+	accounts[account.ID] = account
+	accountsIdSeqMutex.Unlock()
+
 	return account
 }
 

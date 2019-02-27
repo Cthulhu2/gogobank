@@ -206,30 +206,35 @@ func TestTransferFail(t *testing.T) {
 	}
 }
 
-func AccountNewRoutine(balance int64, chnl chan int64, t *testing.T) {
+func AccountNewRoutine(balance int64, chnl chan model.Account, t *testing.T) {
 	var acc model.Account
 
 	acc = AssertNewAccount(balance, t)
 
-	chnl <- acc.Balance
+	chnl <- acc
 }
 
 func TestAccountSync(t *testing.T) {
 	model.Init()
-	chnl := make(chan int64)
+	chnl := make(chan model.Account)
 	var summ int64 = 0
 	var expectedSumm int64 = 0
-	var count int64 = 0
+	var count int = 0
+	var expectedCount int = 10000
+	var acc model.Account
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < expectedCount; i++ {
 		expectedSumm += int64(i)
 		go AccountNewRoutine(int64(i), chnl, t)
 	}
 
 	for {
-		summ += <-chnl
+		acc = <-chnl
+		// happens-before
+		AssertGetAccount(acc.ID, t)
+		summ += acc.Balance
 		count += 1
-		if count == 10000 {
+		if count == expectedCount {
 			close(chnl)
 			break
 		}
@@ -238,20 +243,20 @@ func TestAccountSync(t *testing.T) {
 		t.Errorf("Unexpected summ: %v want %v", summ, expectedSumm)
 	}
 	//
-	for i := 1; i <= 10000; i++ {
+	for i := 1; i <= expectedCount; i++ {
 		AssertGetAccount(int64(i), t)
 	}
-	res := HandleGetAccount(10001, t)
+	res := HandleGetAccount(int64(expectedCount+1), t)
 	if res.Code != model.NotExistsCode {
 		t.Errorf("Unexpected account exist! %v", res.Acc)
 	}
 }
 
-func TransferRoutine(fromId int64, toId int64, summ int64,
+func TransferRoutine(idFrom int64, idTo int64, summ int64,
 	chnl chan int, t *testing.T) {
 
 	var trans handler.TransRes
-	trans = HandleTransfer(fromId, toId, summ, t)
+	trans = HandleTransfer(idFrom, idTo, summ, t)
 	chnl <- trans.Code
 }
 
@@ -289,6 +294,6 @@ func TestTransferSync(t *testing.T) {
 		t.Errorf("Unexpected account balance: %v want %v", acc1.Balance, 10001)
 	}
 	if acc2.Balance != 10002 {
-		t.Errorf("Unexpected account balance: %v want %v", acc1.Balance, 10002)
+		t.Errorf("Unexpected account balance: %v want %v", acc2.Balance, 10002)
 	}
 }

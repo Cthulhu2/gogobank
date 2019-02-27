@@ -25,7 +25,7 @@ type NotEnoughMoneyError struct {
 }
 
 func (e *NotExistsError) Error() string {
-	return fmt.Sprintf("Account '%d' doesn't exists", e.ID)
+	return fmt.Sprintf("Account '%d' doesn't exist", e.ID)
 }
 
 func (e *NotEnoughMoneyError) Error() string {
@@ -33,10 +33,8 @@ func (e *NotEnoughMoneyError) Error() string {
 }
 
 var accountsIdSeq int64
-var accountsIdSeqMutex = &sync.Mutex{}
-
+var accountsMutex = &sync.Mutex{}
 var accounts map[int64]*Account
-var transferMutex = &sync.Mutex{}
 
 func Init() {
 	accountsIdSeq = 0
@@ -48,45 +46,46 @@ func AccountNew(balance int64) *Account {
 		Balance: balance,
 	}
 
-	accountsIdSeqMutex.Lock()
+	accountsMutex.Lock()
 	accountsIdSeq += 1
 	account.ID = accountsIdSeq
 	accounts[account.ID] = account
-	accountsIdSeqMutex.Unlock()
+	accountsMutex.Unlock()
 
 	return account
 }
 
 func AccountGet(id int64) (acc *Account, err error) {
+	accountsMutex.Lock()
 	acc, exists := accounts[id]
+	accountsMutex.Unlock()
+
 	if !exists {
 		return nil, &NotExistsError{id}
 	}
 	return acc, nil
 }
 
-// Transfer money from account to another one
+// Transfer money from an account to another one
 func Transfer(idFrom int64, idTo int64, summ int64) error {
-	accFrom, exists := accounts[idFrom]
-	if !exists {
-		return &NotExistsError{idFrom} //
-	}
-	accTo, exists := accounts[idTo]
-	if !exists {
-		return &NotExistsError{idTo} //
+	accountsMutex.Lock()
+
+	accFrom, existsFrom := accounts[idFrom]
+	accTo, existsTo := accounts[idTo]
+	var err error = nil
+
+	if !existsFrom {
+		err = &NotExistsError{idFrom}
+	} else if !existsTo {
+		err = &NotExistsError{idTo}
+	} else if accFrom.Balance < summ {
+		err = &NotEnoughMoneyError{idFrom, summ}
+	} else {
+		accFrom.Balance -= summ
+		accTo.Balance += summ
 	}
 
-	if idFrom == idTo || summ == 0 {
-		return nil // OK
-	}
+	accountsMutex.Unlock()
 
-	transferMutex.Lock()
-	if accFrom.Balance < summ {
-		transferMutex.Unlock()
-		return &NotEnoughMoneyError{idFrom, summ}
-	}
-	accFrom.Balance -= summ
-	accTo.Balance += summ
-	transferMutex.Unlock()
-	return nil
+	return err
 }
